@@ -35,13 +35,28 @@ class Enemy(pg.sprite.Sprite):
         self.image.set_colorkey(colorkey)
         self.rect.x, self.rect.y = randint(0, 970), randint(0, 950)
         distance = ((500 - self.rect.x) ** 2 + (500 - self.rect.y) ** 2) ** 0.5
-        self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))), int((500 - self.rect.y) / (distance / (speed - 2)))]
+        self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
+                      int((500 - self.rect.y) / (distance / (speed - 2)))]
 
     def update(self):
         self.rect.x += self.speed[0]
         self.rect.y += self.speed[1]
         distance = ((500 - self.rect.x) ** 2 + (500 - self.rect.y) ** 2) ** 0.5
-        self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))), int((500 - self.rect.y) / (distance / (speed - 2)))]
+        self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
+                      int((500 - self.rect.y) / (distance / (speed - 2)))]
+
+
+class Bullet(pg.sprite.Sprite):
+    def __init__(self, distance):
+        super().__init__()
+        self.image = pg.image.load('bullet.png')
+        self.rect = self.image.get_rect()
+        colorkey = self.image.get_at((0, 0))
+        self.image.set_colorkey(colorkey)
+        # self.image = pg.transform.rotate(self.image, 45)
+        self.sp = 20
+        self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
+                      int((500 - self.rect.y) / (distance / (speed - 2)))]
 
 
 if __name__ == '__main__':
