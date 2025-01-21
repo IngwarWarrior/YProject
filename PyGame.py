@@ -1,6 +1,7 @@
+import time
 from math import acos, pi
 from random import randint
-import time
+
 import pygame as pg
 
 
@@ -23,6 +24,7 @@ class Enemy(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         colorkey = self.image.get_at((0, 0))
         self.image.set_colorkey(colorkey)
+        self.mask = pg.mask.from_surface(self.image)
         self.rect.x, self.rect.y = randint(0, 970), randint(0, 950)
         distance = ((500 - self.rect.x) ** 2 + (500 - self.rect.y) ** 2) ** 0.5
         self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
@@ -44,13 +46,15 @@ class Enemy(pg.sprite.Sprite):
 
 
 class Bullet(pg.sprite.Sprite):
+    life = 1
+
     def __init__(self):
         super().__init__()
-        self.life = 1  # ОБРАТИ ВНИМАНИЕ!!! ХП нужны для пробивания врагов!
+        self.life = Bullet.life  # ОБРАТИ ВНИМАНИЕ!!! ХП нужны для пробивания врагов!
         self.image = pg.image.load('bullet.png')
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = 500, 500
-        # self.image = pg.transform.rotate(self.image, 45)
+        self.mask = pg.mask.from_surface(self.image)
         self.sp = 20
         mx, my = 5000, 5000
         for i in enemies:
@@ -77,8 +81,8 @@ class Stopwatch:
         self.screen = screen
         self.image = pg.image.load('table.png')
         self.image = pg.transform.rotate(self.image, 90)
-        self.image = pg.transform.scale(self.image, (400, 300))
-        self.font = pg.font.Font("Comic Sans MS.ttf", 36)  # Шрифт для отображения времени
+        self.image = pg.transform.scale(self.image, (300, 200))
+        self.font = pg.font.Font("Comic Sans MS.ttf", 25)  # Шрифт для отображения времени
         self.running = True  # Флаг для управления работой секундомера
         self.start_time = time.time()  # Время запуска секундомера
 
@@ -91,7 +95,7 @@ class Stopwatch:
 
             # Отображение времени в правом верхнем углу
             text_surface = self.font.render(timer_display, True, (255, 255, 255))
-            text_rect = text_surface.get_rect(topright=(self.screen.get_width() - 60, 100))
+            text_rect = text_surface.get_rect(topright=(self.screen.get_width() - 30, 55))
             self.screen.blit(text_surface, text_rect)
 
     def stop(self):
@@ -106,7 +110,7 @@ class Stopwatch:
 class Level:
     def __init__(self, screen):
         self.screen = screen
-        self.font = pg.font.Font("Comic Sans MS.ttf", 36)  # Шрифт для текста
+        self.font = pg.font.Font("Comic Sans MS.ttf", 25)  # Шрифт для текста
         self.level = 1
         self.max_level = 25
         self.start_time = time.time()  # Запоминаем время начала
@@ -130,7 +134,7 @@ class Level:
     def color(self):
         color = self.get_color()
         text_surface = self.font.render(f'Level: {self.level}', True, color)
-        text_rect = text_surface.get_rect(topright=(self.screen.get_width() - 220, 100))
+        text_rect = text_surface.get_rect(topright=(self.screen.get_width() - 180, 55))
         self.screen.blit(text_surface, text_rect)
 
 
@@ -140,7 +144,7 @@ class Hearts:
         self.max_hearts = 5
         self.current_hearts = 5
         self.heart_image = pg.image.load("heart.png")  # Загрузка изображения сердечка
-        self.heart_image = pg.transform.scale(self.heart_image, (50, 50))  # Изменение размера изображения
+        self.heart_image = pg.transform.scale(self.heart_image, (40, 40))  # Изменение размера изображения
         self.heart_spacing = 5  # Промежуток между сердечками
 
     def plus(self):
@@ -153,8 +157,8 @@ class Hearts:
 
     def draw(self):
         for i in range(self.current_hearts):
-            x = self.screen.get_width() - (i + 1) * (self.heart_image.get_width() + self.heart_spacing) - 60
-            y = 160  # Расположение по вертикали
+            x = self.screen.get_width() - (i + 1) * (self.heart_image.get_width() + self.heart_spacing) - 36
+            y = 100  # Расположение по вертикали
             self.screen.blit(self.heart_image, (x, y))
 
 
@@ -256,7 +260,7 @@ if __name__ == '__main__':
         enemies.draw(screen)
         projectiles.update()
         projectiles.draw(screen)
-        screen.blit(stopwatch.image, (width // 5 * 4 - 200, 0))
+        screen.blit(stopwatch.image, (700, 0))
         stopwatch.update()
         level.update()
         level.color()
