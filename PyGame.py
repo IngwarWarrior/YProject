@@ -1,6 +1,6 @@
 import time
 from math import acos, pi
-from random import randint
+from random import randint, choice
 
 import pygame as pg
 
@@ -10,6 +10,7 @@ class MainCharacter(pg.sprite.Sprite):
         super().__init__()
         self.image = pg.image.load('Character.png')
         self.rect = self.image.get_rect()
+        self.mask = pg.mask.from_surface(self.image)
         colorkey = self.image.get_at((0, 0))
         self.image.set_colorkey(colorkey)
         self.land = [[], [], []]
@@ -162,6 +163,14 @@ class Hearts:
             self.screen.blit(self.heart_image, (x, y))
 
 
+class Collectible(pg.sprite.Sprite): # Класс подбираемых штук. Из него выйдут аптечки и прокачки
+    def __init__(self):
+        super().__init__()
+        self.x, self.y = choice([(randint(-500, 250), randint(-500, 250)), (randint(-500, 250), randint(750, 1500)),
+                            (randint(750, 1500), randint(-500, 250)), (randint(750, 1500), randint(750, 1500))])
+
+
+
 if __name__ == '__main__':
     pg.init()
 
@@ -197,6 +206,7 @@ if __name__ == '__main__':
     level = Level(screen)
     hearts = Hearts(screen)
 
+    collectibles_group = pg.sprite.Group()
     enemies = pg.sprite.Group()
     projectiles = pg.sprite.Group()
     while running:
