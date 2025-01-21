@@ -161,7 +161,7 @@ if __name__ == '__main__':
         tp_l, tp_r, tp_u, tp_d = False, False, False, False
         for i in land:
             for j in i:
-                screen.blit(j.image, (j.rect.x, j.rect.y))
+                screen.blit(j.image, (j.rect.x, j.rect.y))#
         screen.blit(main_char.image, (width // 2 - main_char.rect.width // 2, height // 2 - main_char.rect.height // 2))
         enemies.update()
         enemies.draw(screen)
