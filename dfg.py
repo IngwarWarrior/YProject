@@ -1,6 +1,6 @@
+from math import acos, pi
 from random import randint
 import time
-
 import pygame as pg
 
 
@@ -14,17 +14,10 @@ class MainCharacter(pg.sprite.Sprite):
         self.land = [[], [], []]
         self.la_x = 0
         self.la_y = 0
-        for i in range(3):
-            a = []
-            for j in range(3):
-                field = pg.sprite.Sprite()
-                field_image = pg.image.load('check_field.png')
-                field.image = field_image
-                field.rect = field.image.get_rect()
-                field.rect.x = 1000 * i - 1000
-                field.rect.y = 1000 * j - 1000
-                a.append(field)
-            self.land[i] = a
+
+
+import pygame as pg
+from random import randint
 
 
 class Enemy(pg.sprite.Sprite):
@@ -38,13 +31,62 @@ class Enemy(pg.sprite.Sprite):
         distance = ((500 - self.rect.x) ** 2 + (500 - self.rect.y) ** 2) ** 0.5
         self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
                       int((500 - self.rect.y) / (distance / (speed - 2)))]
+        self.f = 0
 
     def update(self):
         self.rect.x += self.speed[0]
         self.rect.y += self.speed[1]
         distance = ((500 - self.rect.x) ** 2 + (500 - self.rect.y) ** 2) ** 0.5
-        self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
-                      int((500 - self.rect.y) / (distance / (speed - 2)))]
+
+        if (distance / (speed - 2)) == 0:
+            if hearts.count() > 1:
+                hearts.minus()
+                #enemies.kill_enemy
+            else:
+                # Конец игры
+                raise Exception("Game Over")
+        else:
+            self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
+                          int((500 - self.rect.y) / (distance / (speed - 2)))]
+
+        if self.rect.x < 500 and not self.f:
+            self.f = 1
+            self.image = pg.transform.flip(self.image, True, False)
+        if self.rect.x > 500 and self.f:
+            self.f = 0
+            self.image = pg.transform.flip(self.image, True, False)
+
+    def kill_enemy(self):
+        self.kill()  # Удаляет спрайт из всех групп
+
+
+class Bullet(pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.life = 1  # ОБРАТИ ВНИМАНИЕ!!! ХП нужны для пробивания врагов!
+        self.image = pg.image.load('bullet.png')
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = 500, 500
+        # self.image = pg.transform.rotate(self.image, 45)
+        self.sp = 20
+        mx, my = 5000, 5000
+        for i in enemies:
+            if (i.rect.x - 500) ** 2 + (i.rect.y - 500) ** 2 < (mx - 500) ** 2 + (my - 500) ** 2:
+                mx, my = i.rect.x, i.rect.y
+        distance = ((mx - 500) ** 2 + (my - 500) ** 2) ** 0.5
+
+        if (my <= 500 <= mx) or (mx <= 500 <= my):
+            self.image = pg.transform.rotate(self.image, acos(abs(self.rect.x - mx) / distance) * 180 / pi % 91)
+        else:
+            self.image = pg.transform.rotate(self.image, 0 - acos(abs(self.rect.x - mx) / distance) * 180 / pi % 91)
+        colorkey = self.image.get_at((0, 0))
+        self.image.set_colorkey(colorkey)
+        self.speed = [int((mx - 500) / (distance / self.sp)),
+                      int((my - 500) / (distance / self.sp))]
+
+    def update(self):
+        self.rect.x += self.speed[0]
+        self.rect.y += self.speed[1]
 
 
 class Stopwatch:
@@ -117,7 +159,8 @@ class Hearts:
         self.heart_image = pg.image.load("heart.png")  # Загрузка изображения сердечка
         self.heart_image = pg.transform.scale(self.heart_image, (50, 50))  # Изменение размера изображения
         self.heart_spacing = 5  # Промежуток между сердечками
-
+    def count(self):
+        return self.current_hearts
     def plus(self):
         if self.current_hearts < self.max_hearts:
             self.current_hearts += 1
@@ -164,13 +207,12 @@ if __name__ == '__main__':
     count = 1
     clock = pg.time.Clock()
     running = True
-
     stopwatch = Stopwatch(screen)
     level = Level(screen)
     hearts = Hearts(screen)
+
     enemies = pg.sprite.Group()
-    enemy = Enemy()
-    enemies.add(enemy)
+    projectiles = pg.sprite.Group()
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -196,15 +238,21 @@ if __name__ == '__main__':
         count += 1
         if count % 50 == 0:
             enemies.add(Enemy())
+        if count % 60 == 0:
+            projectiles.add(Bullet())
+
         for i in land:
             for j in i:
                 j.rect.x -= speed * int(move_right) - speed * int(move_left)
                 j.rect.y -= speed * int(move_down) - speed * int(move_up)
-        for k in enemies:
-            k.rect.x -= speed * int(move_right) - speed * int(move_left)
-            k.rect.y -= speed * int(move_down) - speed * int(move_up)
+        for i in enemies:
+            i.rect.x -= speed * int(move_right) - speed * int(move_left)
+            i.rect.y -= speed * int(move_down) - speed * int(move_up)
+        for i in projectiles:
+            i.rect.x -= speed * int(move_right) - speed * int(move_left)
+            i.rect.y -= speed * int(move_down) - speed * int(move_up)
 
-        screen.fill('black')#121
+        screen.fill('black')
         if land[1][1].rect.x >= 1000:
             tp_l = True
         elif land[1][1].rect.x <= -1000:
@@ -220,16 +268,17 @@ if __name__ == '__main__':
         tp_l, tp_r, tp_u, tp_d = False, False, False, False
         for i in land:
             for j in i:
-                screen.blit(j.image, (j.rect.x, j.rect.y))
+                screen.blit(j.image, (j.rect.x, j.rect.y))  #
         screen.blit(main_char.image, (width // 2 - main_char.rect.width // 2, height // 2 - main_char.rect.height // 2))
         enemies.update()
         enemies.draw(screen)
+        projectiles.update()
+        projectiles.draw(screen)
         screen.blit(stopwatch.image, (width // 5 * 4 - 200, 0))
         stopwatch.update()
         level.update()
         level.color()
         hearts.draw()
-
         pg.display.flip()
         clock.tick(fps)
     pg.quit()
