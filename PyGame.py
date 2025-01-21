@@ -1,5 +1,6 @@
-from random import randint
 from math import acos, pi
+from random import randint
+
 import pygame as pg
 
 
@@ -13,17 +14,6 @@ class MainCharacter(pg.sprite.Sprite):
         self.land = [[], [], []]
         self.la_x = 0
         self.la_y = 0
-        # for i in range(3):
-        #    a = []
-        #    for j in range(3):
-        #        field = pg.sprite.Sprite()
-        #        field_image = pg.image.load('check_field.png')
-        #        field.image = field_image
-        #        field.rect = field.image.get_rect()
-        #        field.rect.x = 1000 * i - 1000
-        #        field.rect.y = 1000 * j - 1000
-        #        a.append(field)
-        #    self.land[i] = a
 
 
 class Enemy(pg.sprite.Sprite):
@@ -68,7 +58,10 @@ class Bullet(pg.sprite.Sprite):
                 mx, my = i.rect.x, i.rect.y
         distance = ((mx - 500) ** 2 + (my - 500) ** 2) ** 0.5
 
-        self.image = pg.transform.rotate(self.image, acos((self.rect.x - mx) / distance) * 180 / pi % 91)
+        if (my <= 500 <= mx) or (mx <= 500 <= my):
+            self.image = pg.transform.rotate(self.image, acos(abs(self.rect.x - mx) / distance) * 180 / pi % 91)
+        else:
+            self.image = pg.transform.rotate(self.image, 0 - acos(abs(self.rect.x - mx) / distance) * 180 / pi % 91)
         colorkey = self.image.get_at((0, 0))
         self.image.set_colorkey(colorkey)
         self.speed = [int((mx - 500) / (distance / self.sp)),
