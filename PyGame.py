@@ -10,12 +10,27 @@ class MainCharacter(pg.sprite.Sprite):
         super().__init__()
         self.image = pg.image.load('Character.png')
         self.rect = self.image.get_rect()
-        self.mask = pg.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = 475, 450
         colorkey = self.image.get_at((0, 0))
         self.image.set_colorkey(colorkey)
-        self.land = [[], [], []]
-        self.la_x = 0
-        self.la_y = 0
+        self.mask = pg.mask.from_surface(self.image)
+        self.hitf = {}
+
+
+    def update(self):
+        for i in enemies:
+            if pg.sprite.collide_mask(self, i) and i not in self.hitf:
+                self.hitf[i] = 0
+                hearts.minus()
+            elif i in self.hitf and not pg.sprite.collide_mask(self, i):
+                self.hitf.pop(i)
+        popkeys = []
+        for i in self.hitf:
+            self.hitf[i] += 1
+            if self.hitf[i] == 50:
+                popkeys.append(i)
+        for i in popkeys:
+            self.hitf.pop(i)
 
 
 class Enemy(pg.sprite.Sprite):
@@ -27,23 +42,43 @@ class Enemy(pg.sprite.Sprite):
         self.image.set_colorkey(colorkey)
         self.mask = pg.mask.from_surface(self.image)
         self.rect.x, self.rect.y = randint(0, 970), randint(0, 950)
-        distance = ((500 - self.rect.x) ** 2 + (500 - self.rect.y) ** 2) ** 0.5
-        self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
-                      int((500 - self.rect.y) / (distance / (speed - 2)))]
+        self.distance = ((485 - self.rect.x) ** 2 + (475 - self.rect.y) ** 2) ** 0.5
+        self.speed = [int((485 - self.rect.x) / ((self.distance + 1) / (speed - 2))),
+                      int((475 - self.rect.y) / ((self.distance + 1) / (speed - 2)))]
         self.f = 0
+        self.hp = level.level * 5 + 5
+        self.hitf = {}
 
     def update(self):
         self.rect.x += self.speed[0]
         self.rect.y += self.speed[1]
-        distance = ((500 - self.rect.x) ** 2 + (500 - self.rect.y) ** 2) ** 0.5
-        self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
-                      int((500 - self.rect.y) / (distance / (speed - 2)))]
-        if self.rect.x < 500 and not self.f:
+        self.distance = ((485 - self.rect.x) ** 2 + (475 - self.rect.y) ** 2) ** 0.5
+        self.speed = [int((485 - self.rect.x) / ((self.distance + 1) / (speed - 2))),
+                      int((475 - self.rect.y) / ((self.distance + 1) / (speed - 2)))]
+        if self.rect.x < 485 and not self.f:
             self.f = 1
             self.image = pg.transform.flip(self.image, True, False)
-        if self.rect.x > 500 and self.f:
+        if self.rect.x > 485 and self.f:
             self.f = 0
             self.image = pg.transform.flip(self.image, True, False)
+
+        for i in projectiles:
+            if pg.sprite.collide_mask(self, i) and i not in self.hitf:
+                self.hitf[i] = 0
+                self.hp -= 10
+            elif i in self.hitf and not pg.sprite.collide_mask(self, i):
+                self.hitf.pop(i)
+        if self.hp <= 0:
+            self.kill()
+        popkeys = []
+        for i in self.hitf:
+            self.hitf[i] += 1
+            if self.hitf[i] == 25:
+                popkeys.append(i)
+        for i in popkeys:
+            self.hitf.pop(i)
+        if self.rect.x >= 5000 or self.rect.x <= -4000 or self.rect.y >= 5000 or self.rect.y <= - 4000:
+            self.kill()
 
 
 class Bullet(pg.sprite.Sprite):
@@ -55,12 +90,11 @@ class Bullet(pg.sprite.Sprite):
         self.image = pg.image.load('bullet.png')
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = 500, 500
-        self.mask = pg.mask.from_surface(self.image)
         self.sp = 20
         mx, my = 5000, 5000
         for i in enemies:
-            if (i.rect.x - 500) ** 2 + (i.rect.y - 500) ** 2 < (mx - 500) ** 2 + (my - 500) ** 2:
-                mx, my = i.rect.x, i.rect.y
+            if ((i.rect.x + 15) - 500) ** 2 + ((i.rect.y + 25) - 500) ** 2 < (mx - 500) ** 2 + (my - 500) ** 2:
+                mx, my = i.rect.x + 5, i.rect.y + 15
         distance = ((mx - 500) ** 2 + (my - 500) ** 2) ** 0.5
 
         if (my <= 500 <= mx) or (mx <= 500 <= my):
@@ -69,12 +103,15 @@ class Bullet(pg.sprite.Sprite):
             self.image = pg.transform.rotate(self.image, 0 - acos(abs(self.rect.x - mx) / distance) * 180 / pi % 91)
         colorkey = self.image.get_at((0, 0))
         self.image.set_colorkey(colorkey)
-        self.speed = [int((mx - 500) / (distance / self.sp)),
-                      int((my - 500) / (distance / self.sp))]
+        self.mask = pg.mask.from_surface(self.image)
+        self.speed = [int((mx - 500) / ((distance + 1) / self.sp)),
+                      int((my - 500) / ((distance + 1) / self.sp))]
 
     def update(self):
         self.rect.x += self.speed[0]
         self.rect.y += self.speed[1]
+        if self.rect.x >= 5000 or self.rect.x <= -4000 or self.rect.y >= 5000 or self.rect.y <= - 4000:
+            self.kill()
 
 
 class Stopwatch:
@@ -163,11 +200,22 @@ class Hearts:
             self.screen.blit(self.heart_image, (x, y))
 
 
-class Collectible(pg.sprite.Sprite): # Класс подбираемых штук. Из него выйдут аптечки и прокачки
+class Collectible(pg.sprite.Sprite):  # Класс подбираемых штук. Из него выйдут аптечки и прокачки
     def __init__(self):
         super().__init__()
         self.x, self.y = choice([(randint(-500, 250), randint(-500, 250)), (randint(-500, 250), randint(750, 1500)),
-                            (randint(750, 1500), randint(-500, 250)), (randint(750, 1500), randint(750, 1500))])
+                                 (randint(750, 1500), randint(-500, 250)), (randint(750, 1500), randint(750, 1500))])
+
+
+class Medkit(Collectible):
+    def __init__(self):
+        super().__init__()
+        self.image = pg.image.load('medkit.png')
+        self.rect = self.image.get_rect()
+        self.rect.x, self.rect.y = 500, 500
+        colorkey = self.image.get_at((0, 0))
+        self.image.set_colorkey(colorkey)
+        self.mask = pg.mask.from_surface(self.image)
 
 
 
@@ -208,6 +256,7 @@ if __name__ == '__main__':
 
     collectibles_group = pg.sprite.Group()
     enemies = pg.sprite.Group()
+    enemy_time = 50 - level.level
     projectiles = pg.sprite.Group()
     while running:
         for event in pg.event.get():
@@ -232,8 +281,12 @@ if __name__ == '__main__':
                 if event.key == pg.K_d:
                     move_right = False
         count += 1
-        if count % 50 == 0:
+        if count % enemy_time == 0:
             enemies.add(Enemy())
+            for i in range(0, randint(0, level.level // 2)):
+                enemies.add(Enemy())
+            enemy_time = 50 - level.level
+
         if count % 60 == 0:
             projectiles.add(Bullet())
 
@@ -266,6 +319,9 @@ if __name__ == '__main__':
             for j in i:
                 screen.blit(j.image, (j.rect.x, j.rect.y))  #
         screen.blit(main_char.image, (width // 2 - main_char.rect.width // 2, height // 2 - main_char.rect.height // 2))
+        main_char.update()
+        if hearts.current_hearts == 0:
+            running = False
         enemies.update()
         enemies.draw(screen)
         projectiles.update()
