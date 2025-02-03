@@ -202,7 +202,7 @@ class Hill:
         for sprite_rect in self.sprites:
             self.screen.blit(self.sprite_image, sprite_rect.topleft)
 
-    def update(self):
+    def update(self):#
         # Обновление состояния игры (например, можно добавлять логику для спауна спрайтов)
         if len(self.sprites) < 1:  # Ограничение на количество спрайтов
             self.spawn_sprite()
