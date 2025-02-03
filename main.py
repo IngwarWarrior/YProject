@@ -4,6 +4,7 @@ import pygame as pg
 import tkinter as tk
 import threading
 import time
+import random
 
 class MainCharacter(pg.sprite.Sprite):
     def __init__(self):
@@ -125,6 +126,42 @@ class Hearts:
             x = self.screen.get_width() - (i + 1) * (self.heart_image.get_width() + self.heart_spacing)-60
             y = 160  # Расположение по вертикали
             self.screen.blit(self.heart_image, (x, y))
+class Hill:
+    def __init__(self, screen):
+        self.width = 1000
+        self.height = 1000
+        self.screen = screen
+        self.sprites = []
+        self.load_sprites()
+
+    def load_sprites(self):
+        # Загрузка спрайта (замените 'sprite_image.png' на путь к вашему изображению)
+        #self.sprite_image = pg.image.load('hill.png').convert_alpha()
+        sprite_image = pg.image.load('hill.png')
+        self.sprite_image=pg.transform.scale(sprite_image, (50, 50))
+
+    def spawn_sprite(self):
+        # Генерация случайных координат для спавна
+        x = random.randint(0, self.width - self.sprite_image.get_width())
+        y = random.randint(0, self.height - self.sprite_image.get_height())
+        sprite_rect = self.sprite_image.get_rect(topleft=(x, y))
+        self.sprites.append(sprite_rect)
+
+    def draw(self):
+        # Отрисовка всех спрайтов на экране
+        for sprite_rect in self.sprites:
+            self.screen.blit(self.sprite_image, sprite_rect.topleft)
+
+    def update(self):
+        # Обновление состояния игры (например, можно добавлять логику для спауна спрайтов)
+        if len(self.sprites) < 10:  # Ограничение на количество спрайтов
+            self.spawn_sprite()
+
+
+
+
+
+
 
 if __name__ == '__main__':
     pg.init()
@@ -165,6 +202,7 @@ if __name__ == '__main__':
     enemy = Enemy()
     enemies.add(enemy)
     hearts = Hearts(screen)
+    hill = Hill(screen)
     while running:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -223,6 +261,9 @@ if __name__ == '__main__':
         level.update()
         level.color()
         hearts.draw()
+
+        hill.update()
+        hill.draw()
 
         pg.display.flip()
         clock.tick(fps)

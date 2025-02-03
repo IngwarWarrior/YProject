@@ -2,7 +2,7 @@ from math import acos, pi
 from random import randint
 import time
 import pygame as pg
-
+import random
 
 class MainCharacter(pg.sprite.Sprite):
     def __init__(self):
@@ -32,6 +32,7 @@ class Enemy(pg.sprite.Sprite):
         self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
                       int((500 - self.rect.y) / (distance / (speed - 2)))]
         self.f = 0
+        self.tt=(0,0)
 
     def update(self):
         self.rect.x += self.speed[0]
@@ -39,12 +40,14 @@ class Enemy(pg.sprite.Sprite):
         distance = ((500 - self.rect.x) ** 2 + (500 - self.rect.y) ** 2) ** 0.5
 
         if (distance / (speed - 2)) == 0:
-            if hearts.count() > 1:
-                hearts.minus()
-                #enemies.kill_enemy
-            else:
-                # Конец игры
-                raise Exception("Game Over")
+            if self.tt==(0,0) or self.tt<stopwatch.time():
+                if hearts.count() > 1:
+                    hearts.minus()
+                    self.tt=stopwatch.time()
+                    print(self.tt)
+                else:
+                    # Конец игры
+                    raise Exception("Game Over")
         else:
             self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
                           int((500 - self.rect.y) / (distance / (speed - 2)))]
@@ -56,8 +59,6 @@ class Enemy(pg.sprite.Sprite):
             self.f = 0
             self.image = pg.transform.flip(self.image, True, False)
 
-    def kill_enemy(self):
-        self.kill()  # Удаляет спрайт из всех групп
 
 
 class Bullet(pg.sprite.Sprite):
@@ -175,6 +176,36 @@ class Hearts:
             y = 160  # Расположение по вертикали
             self.screen.blit(self.heart_image, (x, y))
 
+class Hill:
+    def __init__(self, screen):
+        self.width = 1000
+        self.height = 1000
+        self.screen = screen
+        self.sprites = []
+        self.load_sprites()
+
+    def load_sprites(self):
+        # Загрузка спрайта (замените 'sprite_image.png' на путь к вашему изображению)
+        #self.sprite_image = pg.image.load('hill.png').convert_alpha()
+        sprite_image = pg.image.load('hill.png')
+        self.sprite_image=pg.transform.scale(sprite_image, (50, 50))
+
+    def spawn_sprite(self):
+        # Генерация случайных координат для спавна
+        x = random.randint(0, self.width - self.sprite_image.get_width())
+        y = random.randint(230, self.height - self.sprite_image.get_height())
+        sprite_rect = self.sprite_image.get_rect(topleft=(x, y))
+        self.sprites.append(sprite_rect)
+
+    def draw(self):
+        # Отрисовка всех спрайтов на экране
+        for sprite_rect in self.sprites:
+            self.screen.blit(self.sprite_image, sprite_rect.topleft)
+
+    def update(self):
+        # Обновление состояния игры (например, можно добавлять логику для спауна спрайтов)
+        if len(self.sprites) < 1:  # Ограничение на количество спрайтов
+            self.spawn_sprite()
 
 if __name__ == '__main__':
     pg.init()
@@ -210,6 +241,7 @@ if __name__ == '__main__':
     stopwatch = Stopwatch(screen)
     level = Level(screen)
     hearts = Hearts(screen)
+    hill = Hill(screen)
 
     enemies = pg.sprite.Group()
     projectiles = pg.sprite.Group()
@@ -279,6 +311,10 @@ if __name__ == '__main__':
         level.update()
         level.color()
         hearts.draw()
+
+        hill.update()
+        hill.draw()
+
         pg.display.flip()
         clock.tick(fps)
     pg.quit()
