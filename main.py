@@ -133,6 +133,7 @@ class Hill:
         self.screen = screen
         self.sprites = []
         self.load_sprites()
+        self.rect.x, self.rect.y = random.randint(0, self.width - self.sprite_image.get_width()),random.randint(0, self.height - self.sprite_image.get_height())
 
     def load_sprites(self):
         # Загрузка спрайта (замените 'sprite_image.png' на путь к вашему изображению)
@@ -142,9 +143,9 @@ class Hill:
 
     def spawn_sprite(self):
         # Генерация случайных координат для спавна
-        x = random.randint(0, self.width - self.sprite_image.get_width())
-        y = random.randint(0, self.height - self.sprite_image.get_height())
-        sprite_rect = self.sprite_image.get_rect(topleft=(x, y))
+        #x = random.randint(0, self.width - self.sprite_image.get_width())
+        #y = random.randint(0, self.height - self.sprite_image.get_height())
+        sprite_rect = self.sprite_image.get_rect(topleft=(self.rect.x, self.rect.y))
         self.sprites.append(sprite_rect)
 
     def draw(self):

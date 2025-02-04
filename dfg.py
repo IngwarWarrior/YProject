@@ -4,6 +4,7 @@ import time
 import pygame as pg
 import random
 
+
 class MainCharacter(pg.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -32,7 +33,7 @@ class Enemy(pg.sprite.Sprite):
         self.speed = [int((500 - self.rect.x) / (distance / (speed - 2))),
                       int((500 - self.rect.y) / (distance / (speed - 2)))]
         self.f = 0
-        self.tt=(0,0)
+        self.tt = (0, 0)
 
     def update(self):
         self.rect.x += self.speed[0]
@@ -40,10 +41,10 @@ class Enemy(pg.sprite.Sprite):
         distance = ((500 - self.rect.x) ** 2 + (500 - self.rect.y) ** 2) ** 0.5
 
         if (distance / (speed - 2)) == 0:
-            if self.tt==(0,0) or self.tt<stopwatch.time():
+            if self.tt == (0, 0) or self.tt < stopwatch.time():
                 if hearts.count() > 1:
                     hearts.minus()
-                    self.tt=stopwatch.time()
+                    self.tt = stopwatch.time()
                     print(self.tt)
                 else:
                     # Конец игры
@@ -58,7 +59,6 @@ class Enemy(pg.sprite.Sprite):
         if self.rect.x > 500 and self.f:
             self.f = 0
             self.image = pg.transform.flip(self.image, True, False)
-
 
 
 class Bullet(pg.sprite.Sprite):
@@ -160,8 +160,10 @@ class Hearts:
         self.heart_image = pg.image.load("heart.png")  # Загрузка изображения сердечка
         self.heart_image = pg.transform.scale(self.heart_image, (50, 50))  # Изменение размера изображения
         self.heart_spacing = 5  # Промежуток между сердечками
+
     def count(self):
         return self.current_hearts
+
     def plus(self):
         if self.current_hearts < self.max_hearts:
             self.current_hearts += 1
@@ -176,25 +178,29 @@ class Hearts:
             y = 160  # Расположение по вертикали
             self.screen.blit(self.heart_image, (x, y))
 
-class Hill:
-    def __init__(self, screen):
+
+class Hill(pg.sprite.Sprite):
+    def __init__(self):
         self.width = 1000
         self.height = 1000
         self.screen = screen
         self.sprites = []
         self.load_sprites()
+        # Генерация случайных координат для спавна
+        self.x = random.randint(0, self.width - self.sprite_image.get_width())
+        self.y = random.randint(230, self.height - self.sprite_image.get_height())
 
     def load_sprites(self):
         # Загрузка спрайта (замените 'sprite_image.png' на путь к вашему изображению)
-        #self.sprite_image = pg.image.load('hill.png').convert_alpha()
+        # self.sprite_image = pg.image.load('hill.png').convert_alpha()
         sprite_image = pg.image.load('hill.png')
-        self.sprite_image=pg.transform.scale(sprite_image, (50, 50))
-
+        self.sprite_image = pg.transform.scale(sprite_image, (50, 50))
+    def image(self):
+        return pg.image.load('hill.png')
+    def koord(self):
+        return self.x,self.y
     def spawn_sprite(self):
-        # Генерация случайных координат для спавна
-        x = random.randint(0, self.width - self.sprite_image.get_width())
-        y = random.randint(230, self.height - self.sprite_image.get_height())
-        sprite_rect = self.sprite_image.get_rect(topleft=(x, y))
+        sprite_rect = self.sprite_image.get_rect(topleft=(self.x, self.y))
         self.sprites.append(sprite_rect)
 
     def draw(self):
@@ -202,10 +208,11 @@ class Hill:
         for sprite_rect in self.sprites:
             self.screen.blit(self.sprite_image, sprite_rect.topleft)
 
-    def update(self):#
+    def update(self):  #
         # Обновление состояния игры (например, можно добавлять логику для спауна спрайтов)
         if len(self.sprites) < 1:  # Ограничение на количество спрайтов
             self.spawn_sprite()
+
 
 if __name__ == '__main__':
     pg.init()
@@ -241,8 +248,10 @@ if __name__ == '__main__':
     stopwatch = Stopwatch(screen)
     level = Level(screen)
     hearts = Hearts(screen)
-    hill = Hill(screen)
+    #hill = Hill(screen)
+    #x, y=hill.koord()
 
+    hills=pg.sprite.Group()
     enemies = pg.sprite.Group()
     projectiles = pg.sprite.Group()
     while running:
@@ -272,6 +281,8 @@ if __name__ == '__main__':
             enemies.add(Enemy())
         if count % 60 == 0:
             projectiles.add(Bullet())
+        if count%100==0:
+            hills.add(Hill())
 
         for i in land:
             for j in i:
@@ -281,6 +292,9 @@ if __name__ == '__main__':
             i.rect.x -= speed * int(move_right) - speed * int(move_left)
             i.rect.y -= speed * int(move_down) - speed * int(move_up)
         for i in projectiles:
+            i.rect.x -= speed * int(move_right) - speed * int(move_left)
+            i.rect.y -= speed * int(move_down) - speed * int(move_up)
+        for i in hills:
             i.rect.x -= speed * int(move_right) - speed * int(move_left)
             i.rect.y -= speed * int(move_down) - speed * int(move_up)
 
@@ -312,8 +326,8 @@ if __name__ == '__main__':
         level.color()
         hearts.draw()
 
-        hill.update()
-        hill.draw()
+        hills.update()
+        hills.draw(screen)
 
         pg.display.flip()
         clock.tick(fps)
